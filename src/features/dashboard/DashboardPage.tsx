@@ -1,24 +1,63 @@
 import SceneCanvas from "../scene/SceneCanvas";
 import StatCard from "../../components/stats/StatCard";
+import { useFieldStore } from "../../store/fieldStore";
 
 export default function DashboardPage() {
-  // 后面这些数据会改成从 API 拉，这里先写死假数据
-  const mockStats = [
-    { label: "平均温度", value: 26.3, unit: "°C", subLabel: "过去1小时" },
-    { label: "平均湿度", value: 68, unit: "%", subLabel: "过去1小时" },
-    { label: "平均光照", value: 820, unit: "lx", subLabel: "当前" },
-    { label: "土壤 pH", value: 6.4, unit: "", subLabel: "适宜范围 5.5-6.5" },
-  ];
+  const { getSelectedField } = useFieldStore();
+  const selected = getSelectedField();
 
-  const mockAlerts = [
-    { id: 1, time: "10:05", msg: "A区光照不足，已自动开启补光灯" },
-    { id: 2, time: "09:52", msg: "C区土壤湿度偏高，请注意排水" },
-  ];
+  const metrics = selected?.latestMetric;
+
+  const mockStats = metrics
+    ? [
+        {
+          label: "温度",
+          value: metrics.temperature,
+          unit: "°C",
+          subLabel: "当前",
+        },
+        {
+          label: "湿度",
+          value: metrics.humidity,
+          unit: "%",
+          subLabel: "当前",
+        },
+        {
+          label: "光照",
+          value: metrics.light,
+          unit: "lx",
+          subLabel: "当前",
+        },
+        {
+          label: "土壤 pH",
+          value: metrics.soilPH,
+          unit: "",
+          subLabel: "适宜范围 5.5-6.5",
+        },
+      ]
+    : [
+        // 还没加载出来时的占位
+        { label: "温度", value: "--", unit: "", subLabel: "" },
+        { label: "湿度", value: "--", unit: "", subLabel: "" },
+        { label: "光照", value: "--", unit: "", subLabel: "" },
+        { label: "土壤 pH", value: "--", unit: "", subLabel: "" },
+      ];
+
+  const selectedName = selected?.name ?? "未选择田块";
 
   return (
     <>
-      {/* 左侧：指标 + 控制按钮（md 以上占宽度 1/4） */}
+      {/* 左侧：指标 + 控制按钮 */}
       <section className="w-full md:w-1/4 h-1/3 md:h-full flex flex-col gap-2">
+        <div className="bg-slate-800/80 rounded-lg px-3 py-2 md:px-4 md:py-3">
+          <div className="text-xs md:text-sm text-slate-400 mb-1">
+            当前田块
+          </div>
+          <div className="text-sm md:text-base font-semibold">
+            {selectedName}
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-2">
           {mockStats.map((s) => (
             <StatCard
@@ -31,7 +70,6 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* 预留控制区域，将来放按钮/开关 */}
         <div className="flex-1 bg-slate-800/80 rounded-lg p-3 mt-2">
           <h2 className="text-sm font-semibold mb-2">设备控制（预留）</h2>
           <p className="text-xs text-slate-400">
@@ -40,30 +78,13 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* 中间：3D 场景（md 以上占宽度 2/4） */}
+      {/* 中间 + 右侧保持你之前的写法即可 */}
       <section className="w-full md:w-2/4 h-1/3 md:h-full">
         <SceneCanvas />
       </section>
 
-      {/* 右侧：告警/日志（md 以上占宽度 1/4） */}
-      <section className="w-full md:w-1/4 h-1/3 md:h-full flex flex-col gap-2">
-        <div className="flex-1 bg-slate-800/80 rounded-lg p-3">
-          <h2 className="text-sm font-semibold mb-2">实时告警</h2>
-          <ul className="space-y-1 max-h-full overflow-y-auto text-xs md:text-sm">
-            {mockAlerts.map((a) => (
-              <li
-                key={a.id}
-                className="border border-slate-700 rounded px-2 py-1"
-              >
-                <div className="flex justify-between">
-                  <span className="font-medium">{a.time}</span>
-                </div>
-                <p className="text-slate-300">{a.msg}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {/* 右侧告警保持不变或稍微改名 */}
+      {/* ... */}
     </>
   );
 }
