@@ -1,5 +1,5 @@
 // src/api/field.ts
-import type { FieldStatus } from "../types/field";
+import type { FieldStatus, FieldHistoryPoint } from "../types/field";
 
 // 这里先用假数据模拟后端返回
 const MOCK_FIELDS: FieldStatus[] = [
@@ -144,3 +144,43 @@ export async function fetchFieldStatuses(): Promise<FieldStatus[]> {
   return data as FieldStatus[];
 }
 */
+
+// 基础模板历史数据，用来生成不同田块的假数据
+const BASE_HISTORY: FieldHistoryPoint[] = [
+  { label: "4月", yield: 2200, growthIndex: 20 },
+  { label: "5月", yield: 2600, growthIndex: 40 },
+  { label: "6月", yield: 3100, growthIndex: 60 },
+  { label: "7月", yield: 3400, growthIndex: 75 },
+  { label: "8月", yield: 3600, growthIndex: 90 },
+  { label: "9月", yield: 3800, growthIndex: 100 },
+];
+
+// 根据田块 id 生成略有差异的假历史数据
+export async function fetchFieldHistory(
+  fieldId: string
+): Promise<FieldHistoryPoint[]> {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  // 简单根据 id 做一点点区分
+  const factor =
+    fieldId === "A1"
+      ? 1
+      : fieldId === "A2"
+      ? 0.95
+      : fieldId === "A3"
+      ? 0.9
+      : fieldId === "B1"
+      ? 1.05
+      : fieldId === "B2"
+      ? 1.0
+      : 0.92;
+
+  return BASE_HISTORY.map((p, index) => ({
+    label: p.label,
+    yield: Math.round(p.yield * factor + index * 40),
+    growthIndex: Math.min(
+      100,
+      Math.max(0, Math.round(p.growthIndex * factor + (factor - 1) * 15))
+    ),
+  }));
+}

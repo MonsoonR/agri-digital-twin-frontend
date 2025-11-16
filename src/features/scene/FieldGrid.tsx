@@ -1,24 +1,22 @@
-// src/features/scene/FieldGrid.tsx
 import { useEffect, useMemo } from "react";
 import { Color, Vector3 } from "three";
 import { useFieldStore } from "../../store/fieldStore";
 import type { FieldStatus } from "../../types/field";
 
-const CELL_SIZE = 3; // 每个田块宽高
-const CELL_GAP = 0.3; // 田块间间距
+const CELL_SIZE = 3;
+const CELL_GAP = 0.3;
 
-const RED = new Color("#991b1b");
-const GREEN = new Color("#15803d");
+// 更偏荧光绿的配色：低长势略偏黄绿，高长势亮黄绿
+const BAD = new Color("#4ade80");   // 较差 - 绿色偏暗
+const GOOD = new Color("#bef264");  // 良好 - 明亮黄绿色
 
-// 0~1 的 healthScore 映射到红绿之间
 function healthToColor(health: number): Color {
   const h = Math.min(1, Math.max(0, health));
   const c = new Color();
-  c.lerpColors(RED, GREEN, h);
+  c.lerpColors(BAD, GOOD, h);
   return c;
 }
 
-// 计算田块在场景中的位置，让整个网格居中
 function getCellPosition(
   row: number,
   col: number,
@@ -49,7 +47,6 @@ export default function FieldGrid() {
     setHoveredField,
   } = useFieldStore();
 
-  // 组件挂载时加载一次数据
   useEffect(() => {
     if (fields.length === 0 && !loading && !error) {
       loadFields();
@@ -67,7 +64,6 @@ export default function FieldGrid() {
     console.error("加载田块数据失败：", error);
   }
 
-  // 空数据时，先只渲染一个底板
   if (fields.length === 0) {
     return (
       <group>
@@ -85,19 +81,19 @@ export default function FieldGrid() {
 
   return (
     <group>
-      {/* 地基 */}
+      {/* 地基：略带绿色的暗色地面 */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.01, 0]}
+        position={[0, -0.05, 0]}
         receiveShadow
       >
         <planeGeometry
           args={[
-            cols * CELL_SIZE + (cols - 1) * CELL_GAP + 1,
-            rows * CELL_SIZE + (rows - 1) * CELL_GAP + 1,
+            cols * CELL_SIZE + (cols - 1) * CELL_GAP + 2,
+            rows * CELL_SIZE + (rows - 1) * CELL_GAP + 2,
           ]}
         />
-        <meshStandardMaterial color={"#020617"} />
+        <meshStandardMaterial color={"#022c22"} />
       </mesh>
 
       {/* 田块网格 */}
@@ -108,7 +104,7 @@ export default function FieldGrid() {
         const isHovered = hoveredFieldId === field.id;
         const isSelected = selectedFieldId === field.id;
 
-        const scale = isSelected ? 1.1 : isHovered ? 1.04 : 1;
+        const scale = isSelected ? 1.12 : isHovered ? 1.05 : 1;
 
         return (
           <mesh
@@ -129,7 +125,7 @@ export default function FieldGrid() {
             onClick={(e) => {
               e.stopPropagation();
               setSelectedField(
-                isSelected ? undefined : field.id // 再次点击取消选中
+                isSelected ? undefined : field.id
               );
               console.log("点击田块:", field);
             }}
@@ -137,11 +133,8 @@ export default function FieldGrid() {
             <planeGeometry args={[CELL_SIZE, CELL_SIZE]} />
             <meshStandardMaterial
               color={baseColor}
-              emissive={
-                isSelected
-                  ? baseColor.clone().multiplyScalar(0.4)
-                  : new Color("#000000")
-              }
+              emissive={baseColor.clone().multiplyScalar(isSelected ? 0.6 : 0.25)}
+              emissiveIntensity={1.2}
             />
           </mesh>
         );
