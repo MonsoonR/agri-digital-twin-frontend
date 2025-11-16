@@ -2,7 +2,6 @@
 
 type Accent = "green" | "blue" | "yellow" | "amber" | "red";
 
-// 这里虽然还叫这些名字，但都围绕荧光绿这一套做细微变化
 const accentMap: Record<Accent, string> = {
   green: "from-lime-400 via-lime-300 to-lime-200",
   blue: "from-emerald-400 via-lime-300 to-emerald-200",

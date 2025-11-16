@@ -1,7 +1,22 @@
 // src/api/field.ts
 import type { FieldStatus, FieldHistoryPoint } from "../types/field";
 
-// 这里先用假数据模拟后端返回
+const now = new Date().toISOString();
+
+const makeMetric = (
+  temperature: number,
+  humidity: number,
+  light: number,
+  soilPH: number
+) => ({
+  timestamp: now,
+  temperature,
+  humidity,
+  light,
+  soilPH,
+});
+
+// 8 块田，分别设置不同状态
 const MOCK_FIELDS: FieldStatus[] = [
   {
     id: "A1",
@@ -9,143 +24,88 @@ const MOCK_FIELDS: FieldStatus[] = [
     row: 0,
     col: 0,
     healthScore: 0.9,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 26.3,
-      humidity: 68,
-      light: 820,
-      soilPH: 6.4,
-    },
+    growthStage: "孕穗期",
+    lastUpdated: now,
+    latestMetric: makeMetric(26.1, 78, 880, 6.2), // 健康
   },
   {
     id: "A2",
     name: "A2 区",
     row: 0,
     col: 1,
-    healthScore: 0.7,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 25.8,
-      humidity: 70,
-      light: 790,
-      soilPH: 6.3,
-    },
+    healthScore: 0.72,
+    growthStage: "灌浆期",
+    lastUpdated: now,
+    latestMetric: makeMetric(25.8, 72, 640, 6.1), // 光照略低
   },
   {
     id: "A3",
     name: "A3 区",
     row: 0,
     col: 2,
-    healthScore: 0.5,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 25.1,
-      humidity: 72,
-      light: 760,
-      soilPH: 6.2,
-    },
+    healthScore: 0.55,
+    growthStage: "抽穗期",
+    lastUpdated: now,
+    latestMetric: makeMetric(25.4, 69, 580, 6.0), // 光照偏低
   },
   {
     id: "A4",
     name: "A4 区",
     row: 0,
     col: 3,
-    healthScore: 0.3,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 24.7,
-      humidity: 75,
-      light: 720,
-      soilPH: 6.1,
-    },
+    healthScore: 0.4,
+    growthStage: "分蘖期",
+    lastUpdated: now,
+    latestMetric: makeMetric(24.9, 65, 560, 6.3), // 生长早期 + 光照不足
   },
   {
     id: "B1",
     name: "B1 区",
     row: 1,
     col: 0,
-    healthScore: 0.8,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 26.0,
-      humidity: 67,
-      light: 840,
-      soilPH: 6.5,
-    },
+    healthScore: 0.68,
+    growthStage: "拔节期",
+    lastUpdated: now,
+    latestMetric: makeMetric(26.0, 44, 860, 6.4), // 偏干
   },
   {
     id: "B2",
     name: "B2 区",
     row: 1,
     col: 1,
-    healthScore: 0.6,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 25.4,
-      humidity: 69,
-      light: 800,
-      soilPH: 6.3,
-    },
+    healthScore: 0.48,
+    growthStage: "拔节期",
+    lastUpdated: now,
+    latestMetric: makeMetric(25.5, 38, 820, 6.5), // 明显干旱
   },
   {
     id: "B3",
     name: "B3 区",
     row: 1,
     col: 2,
-    healthScore: 0.4,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 25.0,
-      humidity: 71,
-      light: 770,
-      soilPH: 6.2,
-    },
+    healthScore: 0.52,
+    growthStage: "抽穗期",
+    lastUpdated: now,
+    latestMetric: makeMetric(25.7, 62, 800, 5.0), // 土壤偏酸
   },
   {
     id: "B4",
     name: "B4 区",
     row: 1,
     col: 3,
-    healthScore: 0.2,
-    lastUpdated: "2025-11-15T10:00:00Z",
-    latestMetric: {
-      timestamp: "2025-11-15T10:00:00Z",
-      temperature: 24.5,
-      humidity: 74,
-      light: 730,
-      soilPH: 6.0,
-    },
+    healthScore: 0.45,
+    growthStage: "成熟期",
+    lastUpdated: now,
+    latestMetric: makeMetric(25.9, 60, 830, 7.1), // 土壤偏碱
   },
 ];
 
-// 模拟从服务器获取田块状态列表
 export async function fetchFieldStatuses(): Promise<FieldStatus[]> {
-  // 这里先用 setTimeout 模拟网络延迟
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 300));
   return MOCK_FIELDS;
 }
 
-/*
-将来你们接后端接口时，可以改成类似这样：
-
-export async function fetchFieldStatuses(): Promise<FieldStatus[]> {
-  const res = await fetch("https://your-api.example.com/fields/status");
-  if (!res.ok) {
-    throw new Error("Failed to fetch field status");
-  }
-  const data = await res.json();
-  return data as FieldStatus[];
-}
-*/
-
-// 基础模板历史数据，用来生成不同田块的假数据
+// 历史数据模板
 const BASE_HISTORY: FieldHistoryPoint[] = [
   { label: "4月", yield: 2200, growthIndex: 20 },
   { label: "5月", yield: 2600, growthIndex: 40 },
@@ -155,32 +115,34 @@ const BASE_HISTORY: FieldHistoryPoint[] = [
   { label: "9月", yield: 3800, growthIndex: 100 },
 ];
 
-// 根据田块 id 生成略有差异的假历史数据
 export async function fetchFieldHistory(
   fieldId: string
 ): Promise<FieldHistoryPoint[]> {
   await new Promise((resolve) => setTimeout(resolve, 300));
 
-  // 简单根据 id 做一点点区分
   const factor =
     fieldId === "A1"
-      ? 1
+      ? 1.05
       : fieldId === "A2"
-      ? 0.95
+      ? 1.0
       : fieldId === "A3"
+      ? 0.95
+      : fieldId === "A4"
       ? 0.9
       : fieldId === "B1"
-      ? 1.05
+      ? 0.98
       : fieldId === "B2"
-      ? 1.0
-      : 0.92;
+      ? 0.9
+      : fieldId === "B3"
+      ? 0.92
+      : 0.88;
 
   return BASE_HISTORY.map((p, index) => ({
     label: p.label,
     yield: Math.round(p.yield * factor + index * 40),
     growthIndex: Math.min(
       100,
-      Math.max(0, Math.round(p.growthIndex * factor + (factor - 1) * 15))
+      Math.max(0, Math.round(p.growthIndex * factor + (factor - 1) * 20))
     ),
   }));
 }

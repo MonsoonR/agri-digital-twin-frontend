@@ -1,5 +1,5 @@
 // src/components/devices/LightingControlPanel.tsx
-import { useState } from "react";
+import { useFieldStore } from "../../store/fieldStore";
 
 interface LightingControlPanelProps {
   fieldName?: string;
@@ -10,14 +10,22 @@ export default function LightingControlPanel({
   fieldName,
   currentLight,
 }: LightingControlPanelProps) {
-  const [autoMode, setAutoMode] = useState(true);
-  const [manualOn, setManualOn] = useState(false);
+  const {
+    lightingMode,
+    manualLightOn,
+    lightThreshold,
+    setLightingMode,
+    setManualLightOn,
+  } = useFieldStore();
 
-  // 自动模式：示例阈值 800 lx 以下就判定需要补光
-  const effectiveOn =
-    autoMode && currentLight !== undefined
-      ? currentLight < 800
-      : manualOn;
+  const autoMode = lightingMode === "auto";
+
+  // 统一的补光开启逻辑
+  const supplementOn = autoMode
+    ? currentLight !== undefined
+      ? currentLight < lightThreshold
+      : false
+    : manualLightOn;
 
   const lightText =
     currentLight !== undefined ? `${currentLight.toFixed(0)} lx` : "--";
@@ -35,7 +43,7 @@ export default function LightingControlPanel({
               光照控制
             </span>
             <span className="text-[10px] md:text-xs text-lime-200/80 leading-snug">
-              根据光照强度自动开启补光灯，可切换手动控制。
+              根据光照强度自动开启补光灯，可切换为手动控制。
             </span>
           </div>
         </div>
@@ -56,10 +64,10 @@ export default function LightingControlPanel({
           <span className="text-lime-200/80">补光灯状态</span>
           <span
             className={`text-xs font-semibold ${
-              effectiveOn ? "text-emerald-300" : "text-lime-300/80"
+              supplementOn ? "text-emerald-300" : "text-lime-300/80"
             }`}
           >
-            {effectiveOn ? "ON（已开启）" : "OFF（关闭）"}
+            {supplementOn ? "ON（已开启）" : "OFF（关闭）"}
           </span>
         </div>
       </div>
@@ -68,7 +76,7 @@ export default function LightingControlPanel({
       <div className="flex items-center gap-2 text-[11px] md:text-xs">
         <button
           type="button"
-          onClick={() => setAutoMode(true)}
+          onClick={() => setLightingMode("auto")}
           className={`flex-1 rounded-full border px-3 py-1 ${
             autoMode
               ? "border-lime-400 bg-lime-400/15 text-lime-100"
@@ -79,7 +87,7 @@ export default function LightingControlPanel({
         </button>
         <button
           type="button"
-          onClick={() => setAutoMode(false)}
+          onClick={() => setLightingMode("manual")}
           className={`flex-1 rounded-full border px-3 py-1 ${
             !autoMode
               ? "border-lime-400 bg-lime-400/15 text-lime-100"
@@ -96,13 +104,16 @@ export default function LightingControlPanel({
           <div className="flex items-center justify-between mb-1">
             <span>示例阈值策略</span>
             <span className="text-lime-300 whitespace-nowrap">
-              800 lx 自动补光
+              {lightThreshold} lx 自动补光
             </span>
           </div>
           <p className="break-words">
             当监测光照低于{" "}
-            <span className="text-lime-300 font-medium">800 lx</span> 时自动开启补光灯；
-            当光照恢复高于阈值一定幅度后自动关闭。阈值和控制逻辑可与真实物联网设备参数联动。
+            <span className="text-lime-300 font-medium">
+              {lightThreshold} lx
+            </span>{" "}
+            时自动开启补光灯；当光照恢复高于阈值一定幅度后自动关闭。
+            阈值和控制逻辑可与真实物联网设备参数联动。
           </p>
         </div>
       ) : (
@@ -115,14 +126,14 @@ export default function LightingControlPanel({
           </div>
           <button
             type="button"
-            onClick={() => setManualOn((prev) => !prev)}
+            onClick={() => setManualLightOn(!manualLightOn)}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition ${
-              manualOn ? "bg-emerald-400" : "bg-slate-600"
+              manualLightOn ? "bg-emerald-400" : "bg-slate-600"
             }`}
           >
             <span
               className={`inline-block h-3.5 w-3.5 transform rounded-full bg-slate-950 transition ${
-                manualOn ? "translate-x-3.5" : "translate-x-0.5"
+                manualLightOn ? "translate-x-3.5" : "translate-x-0.5"
               }`}
             />
           </button>

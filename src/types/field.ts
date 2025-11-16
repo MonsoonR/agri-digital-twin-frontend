@@ -1,5 +1,16 @@
+// src/types/field.ts
+
+// 水稻生育阶段
+export type GrowthStage =
+  | "分蘖期"
+  | "拔节期"
+  | "孕穗期"
+  | "抽穗期"
+  | "灌浆期"
+  | "成熟期";
+
 export type FieldMetric = {
-  timestamp: string; // ISO 字符串
+  timestamp: string;
   temperature: number;
   humidity: number;
   light: number;
@@ -11,19 +22,14 @@ export type FieldStatus = {
   name: string;
   row: number;
   col: number;
-  healthScore: number;
+  healthScore: number; // 0~1
   lastUpdated: string;
   latestMetric: FieldMetric;
+  growthStage: GrowthStage;
 };
 
-/**
- * 每块田的历史数据点（假数据结构）
- * label: 时间/阶段标签，比如 "4月"、"孕穗期"
- * yield: 该时间点的产量指数
- * growthIndex: 生长进度 0-100
- */
 export type FieldHistoryPoint = {
-  label: string;
-  yield: number;
-  growthIndex: number;
+  label: string;      // 时间标签，例如 "4月"
+  yield: number;      // 产量指数
+  growthIndex: number; // 生长进度 0~100
 };
