@@ -13,7 +13,7 @@ const FIELD_THICKNESS = 0.9;
 
 const BAD = new Color("#4ade80");
 const GOOD = new Color("#bef264");
-const SOIL_COLOR = new Color("#020617");
+const SOIL_COLOR = new Color("#502806ff");
 const GRID_LINE_COLOR = new Color("#bbf7d0");
 
 type StressType = "healthy" | "lowLight" | "dry" | "soilPH";
