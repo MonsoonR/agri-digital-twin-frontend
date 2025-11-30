@@ -4,21 +4,27 @@ import { Color, Vector3, Group } from "three";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { useFieldStore } from "../../store/fieldStore";
+import { useTheme } from "../../store/themeStore";
 import type { FieldStatus, GrowthStage } from "../../types/field";
 
 const CELL_SIZE = 3;
 const CELL_GAP = 0.4;
-// 明显加厚
 const FIELD_THICKNESS = 0.9;
 
-const BAD = new Color("#4ade80");
-const GOOD = new Color("#bef264");
-const SOIL_COLOR = new Color("#020617");
-const GRID_LINE_COLOR = new Color("#bbf7d0");
+// 暗色主题颜色
+const DARK_BAD = new Color("#4ade80");
+const DARK_GOOD = new Color("#bef264");
+const DARK_SOIL = new Color("#3a2105ff");
+const DARK_GRID_LINE = new Color("#bbf7d0");
+
+// 亮色主题颜色
+const LIGHT_BAD = new Color("#84cc16");
+const LIGHT_GOOD = new Color("#bef264");
+const LIGHT_SOIL = new Color("#92400e");
+const LIGHT_GRID_LINE = new Color("#65a30d");
 
 type StressType = "healthy" | "lowLight" | "dry" | "soilPH";
 
-// 生育阶段 -> 高度因子
 const STAGE_FACTOR: Record<GrowthStage, number> = {
   分蘖期: 0.4,
   拔节期: 0.55,
@@ -32,17 +38,19 @@ function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
 
-function healthToColor(health: number): Color {
+function healthToColor(health: number, isDark: boolean): Color {
   const h = clamp(health, 0, 1);
   const c = new Color();
-  c.lerpColors(BAD, GOOD, h);
+  if (isDark) {
+    c.lerpColors(DARK_BAD, DARK_GOOD, h);
+  } else {
+    c.lerpColors(LIGHT_BAD, LIGHT_GOOD, h);
+  }
   return c;
 }
 
-// 根据数据 + 补光状态判断压力类型
 function getStressType(field: FieldStatus, supplementOn: boolean): StressType {
   const m = field.latestMetric;
-
   const lowLight = m.light < 700;
   const tooDry = m.humidity < 50;
   const badPH = m.soilPH < 5.5 || m.soilPH > 6.8;
@@ -53,7 +61,6 @@ function getStressType(field: FieldStatus, supplementOn: boolean): StressType {
   return "healthy";
 }
 
-// 生长高度：生育阶段 + 健康度共同决定
 function getGrowthFactor(field: FieldStatus): number {
   const stageBase = STAGE_FACTOR[field.growthStage] ?? 0.6;
   const health = clamp(field.healthScore, 0.2, 1);
@@ -62,7 +69,6 @@ function getGrowthFactor(field: FieldStatus): number {
   return clamp(withHealth, 0.3, 1.3);
 }
 
-/** 单株水稻：秆 + 3 片叶子 */
 function RicePlant({
   height,
   color,
@@ -76,8 +82,6 @@ function RicePlant({
   const leafWidth = 0.12;
   const leafThickness = 0.02;
 
-  const leafColor = color;
-
   return (
     <group>
       {/* 秆 */}
@@ -85,7 +89,11 @@ function RicePlant({
         <cylinderGeometry
           args={[stemRadius * 0.7, stemRadius, stemHeight, 8]}
         />
-        <meshStandardMaterial color="#16a34a" />
+        <meshStandardMaterial 
+          color="#16a34a"
+          roughness={0.7}
+          metalness={0.1}
+        />
       </mesh>
 
       {/* 三片叶子 */}
@@ -105,11 +113,11 @@ function RicePlant({
           >
             <boxGeometry args={[leafWidth, leafHeight, leafThickness]} />
             <meshStandardMaterial
-              color={leafColor}
-              roughness={0.85}
-              metalness={0}
-              emissive={new Color(leafColor)}
-              emissiveIntensity={0.35}
+              color={color}
+              roughness={0.75}
+              metalness={0.05}
+              emissive={new Color(color)}
+              emissiveIntensity={0.3}
             />
           </mesh>
         );
@@ -118,7 +126,6 @@ function RicePlant({
   );
 }
 
-/** 一簇水稻，轻微摇摆，补光时更亮一点 */
 function RicePatch({
   growth,
   stress,
@@ -162,7 +169,6 @@ function RicePatch({
       : "#fb923c";
 
   if (supplementOn && stress === "lowLight") {
-    // 光照不足 + 补光开启 -> 叶子变成亮绿
     plantColor = "#bef264";
   }
 
@@ -222,6 +228,8 @@ export default function FieldGrid() {
     manualLightOn,
     lightThreshold,
   } = useFieldStore();
+  
+  const { isDark } = useTheme();
 
   useEffect(() => {
     if (fields.length === 0 && !loading && !error) {
@@ -255,7 +263,10 @@ export default function FieldGrid() {
           receiveShadow
         >
           <planeGeometry args={[20, 20]} />
-          <meshStandardMaterial color={"#020617"} />
+          <meshStandardMaterial 
+            color={isDark ? "#020617" : "#e0f2fe"}
+            roughness={0.9}
+          />
         </mesh>
       </group>
     );
@@ -264,6 +275,10 @@ export default function FieldGrid() {
   const baseWidth = gridWidth + 2;
   const baseHeight = gridHeight + 2;
   const autoMode = lightingMode === "auto";
+  
+  const soilColor = isDark ? DARK_SOIL : LIGHT_SOIL;
+  const gridLineColor = isDark ? DARK_GRID_LINE : LIGHT_GRID_LINE;
+  const groundColor = isDark ? "#020617" : "#e0f2fe";
 
   return (
     <group>
@@ -274,7 +289,10 @@ export default function FieldGrid() {
         receiveShadow
       >
         <planeGeometry args={[baseWidth, baseHeight]} />
-        <meshStandardMaterial color={"#020617"} />
+        <meshStandardMaterial 
+          color={groundColor}
+          roughness={0.95}
+        />
       </mesh>
 
       {fields.map((field: FieldStatus) => {
@@ -282,15 +300,12 @@ export default function FieldGrid() {
         const isHovered = hoveredFieldId === field.id;
         const isSelected = selectedFieldId === field.id;
 
-        // 补光灯是否作用在该田块上：
-        // 自动模式：按该田块光照判断；手动模式：只作用于当前选中田块
         const supplementOn = autoMode
           ? field.latestMetric.light < lightThreshold
           : manualLightOn && isSelected;
 
-        let topColor = healthToColor(field.healthScore);
+        let topColor = healthToColor(field.healthScore, isDark);
         if (supplementOn) {
-          // 补光开启时，表面偏暖一点
           topColor = topColor.clone().lerp(new Color("#facc15"), 0.25);
         }
 
@@ -328,7 +343,7 @@ export default function FieldGrid() {
             >
               <boxGeometry args={[CELL_SIZE, FIELD_THICKNESS, CELL_SIZE]} />
               <meshStandardMaterial
-                color={SOIL_COLOR}
+                color={soilColor}
                 roughness={0.9}
                 metalness={0.1}
               />
@@ -346,6 +361,8 @@ export default function FieldGrid() {
                 color={topColor}
                 emissive={topColor.clone().multiplyScalar(emissiveStrength)}
                 emissiveIntensity={1.0}
+                roughness={0.7}
+                metalness={0.05}
               />
             </mesh>
 
@@ -358,10 +375,10 @@ export default function FieldGrid() {
                 args={[CELL_SIZE * 0.96, CELL_SIZE * 0.96, 4, 4]}
               />
               <meshBasicMaterial
-                color={GRID_LINE_COLOR}
+                color={gridLineColor}
                 wireframe
                 transparent
-                opacity={0.35}
+                opacity={isDark ? 0.35 : 0.25}
               />
             </mesh>
 
@@ -382,9 +399,9 @@ export default function FieldGrid() {
               >
                 <circleGeometry args={[CELL_SIZE * 0.6, 32]} />
                 <meshBasicMaterial
-                  color={"#bef264"}
+                  color={isDark ? "#bef264" : "#84cc16"}
                   transparent
-                  opacity={0.25}
+                  opacity={isDark ? 0.25 : 0.35}
                 />
               </mesh>
             )}
@@ -397,11 +414,15 @@ export default function FieldGrid() {
               style={{ pointerEvents: "none" }}
             >
               <div
-                className={`px-2 py-[3px] rounded-full border text-[10px] whitespace-nowrap shadow-[0_0_10px_rgba(190,242,100,0.35)] backdrop-blur-sm
+                className={`px-2 py-[3px] rounded-full border text-[10px] whitespace-nowrap backdrop-blur-sm transition-all duration-300
                   ${
                     isSelected
-                      ? "border-lime-300 bg-lime-400/10 text-lime-100"
-                      : "border-lime-400/60 bg-slate-950/90 text-lime-100/90"
+                      ? (isDark 
+                          ? "border-lime-300 bg-lime-400/10 text-lime-100 shadow-[0_0_10px_rgba(190,242,100,0.35)]"
+                          : "border-lime-500 bg-white/90 text-lime-700 shadow-lg")
+                      : (isDark
+                          ? "border-lime-400/60 bg-slate-950/90 text-lime-100/90"
+                          : "border-lime-500/50 bg-white/70 text-gray-700 shadow-md")
                   }`}
               >
                 {field.name} · {Math.round(field.healthScore * 100)}%

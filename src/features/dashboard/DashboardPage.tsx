@@ -5,6 +5,7 @@ import { useFieldStore } from "../../store/fieldStore";
 import LightingControlPanel from "../../components/devices/LightingControlPanel";
 import YieldTrendChart from "../../components/charts/YieldTrendChart";
 import GrowthCycleChart from "../../components/charts/GrowthCycleChart";
+import { useTheme } from "../../store/themeStore";
 
 type LeftMetricItem = {
   label: string;
@@ -14,21 +15,29 @@ type LeftMetricItem = {
 };
 
 function LeftMetricCard({ item }: { item: LeftMetricItem }) {
+  const { isDark } = useTheme();
+  
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-lime-400/25 bg-slate-950/90 px-3 py-2">
-      <div className="h-8 w-8 md:h-9 md:w-9 flex items-center justify-center rounded-full bg-lime-400/20 text-lg">
+    <div className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-colors
+      ${isDark 
+        ? 'border-lime-400/25 bg-slate-950/90' 
+        : 'border-lime-600/30 bg-white/90 shadow-sm'}`}>
+      <div className={`h-8 w-8 md:h-9 md:w-9 flex items-center justify-center rounded-full text-lg
+        ${isDark ? 'bg-lime-400/20' : 'bg-lime-100'}`}>
         {item.icon}
       </div>
       <div className="flex-1 flex flex-col">
         <div className="flex items-center justify-between gap-1">
-          <span className="text-xs md:text-sm text-lime-100/90">
+          <span className={`text-xs md:text-sm ${isDark ? 'text-lime-100/90' : 'text-gray-800'}`}>
             {item.label}
           </span>
-          <span className="text-xs md:text-sm font-semibold text-lime-50 whitespace-nowrap">
+          <span className={`text-xs md:text-sm font-semibold whitespace-nowrap
+            ${isDark ? 'text-lime-50' : 'text-gray-900'}`}>
             {item.value}
           </span>
         </div>
-        <span className="text-[10px] md:text-[11px] text-lime-200/70 leading-snug">
+        <span className={`text-[10px] md:text-[11px] leading-snug
+          ${isDark ? 'text-lime-200/70' : 'text-gray-600'}`}>
           {item.desc}
         </span>
       </div>
@@ -37,6 +46,8 @@ function LeftMetricCard({ item }: { item: LeftMetricItem }) {
 }
 
 function BottomStatusBar() {
+  const { isDark } = useTheme();
+  
   const items = [
     { label: "作物生长状态", value: "良好", progress: 0.72 },
     { label: "土壤质量", value: "偏酸", progress: 0.45 },
@@ -47,23 +58,33 @@ function BottomStatusBar() {
   ];
 
   return (
-    <section className="mt-2 rounded-2xl border border-lime-400/40 bg-slate-950/95 px-3 md:px-4 py-3 flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] md:text-xs text-lime-100/80">
+    <section className={`mt-2 rounded-2xl border px-3 md:px-4 py-3 flex flex-col gap-2 transition-colors
+      ${isDark 
+        ? 'border-lime-400/40 bg-slate-950/95' 
+        : 'border-lime-600/30 bg-white shadow-md'}`}>
+      <div className={`flex flex-wrap items-center justify-between gap-1 text-[10px] md:text-xs
+        ${isDark ? 'text-lime-100/80' : 'text-gray-700'}`}>
         <span>作物生长全周期监控</span>
         <span>示意指标 · 后续可接模型输出</span>
       </div>
       <div className="flex-1 flex items-center gap-2 overflow-x-auto">
         {items.map((item) => (
           <div key={item.label} className="min-w-[110px] flex-1">
-            <div className="flex items-center justify-between text-[10px] md:text-[11px] text-lime-100/80 mb-1">
+            <div className={`flex items-center justify-between text-[10px] md:text-[11px] mb-1
+              ${isDark ? 'text-lime-100/80' : 'text-gray-700'}`}>
               <span className="truncate max-w-[70%]">{item.label}</span>
               <span className="font-semibold whitespace-nowrap">
                 {item.value}
               </span>
             </div>
-            <div className="h-[6px] rounded-full bg-slate-800 overflow-hidden">
+            <div className={`h-[6px] rounded-full overflow-hidden
+              ${isDark ? 'bg-slate-800' : 'bg-gray-200'}`}>
               <div
-                className="h-full rounded-full bg-gradient-to-r from-lime-300 via-lime-400 to-lime-500"
+                className={`h-full rounded-full ${
+                  isDark 
+                    ? 'bg-gradient-to-r from-lime-300 via-lime-400 to-lime-500'
+                    : 'bg-gradient-to-r from-lime-400 via-lime-500 to-lime-600'
+                }`}
                 style={{ width: `${item.progress * 100}%` }}
               />
             </div>
@@ -76,6 +97,7 @@ function BottomStatusBar() {
 
 export default function DashboardPage() {
   const { getSelectedField, history, historyLoading } = useFieldStore();
+  const { isDark } = useTheme();
   const selected = getSelectedField();
   const metrics = selected?.latestMetric;
 
@@ -154,7 +176,7 @@ export default function DashboardPage() {
       label: "风速",
       icon: "🌬️",
       value: "3.4 m/s",
-      desc: "示意数据，可接气象站",
+      desc: "示意数据,可接气象站",
     },
   ];
 
@@ -163,7 +185,6 @@ export default function DashboardPage() {
     { id: 2, time: "09:52", msg: "B3 区土壤湿度偏高，建议适度排水。" },
   ];
 
-  // 从 history 里拆出两个图表数据
   const yieldData = history.map((p) => ({ label: p.label, yield: p.yield }));
   const growthData = history.map((p) => ({
     label: p.label,
@@ -172,23 +193,32 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-3 py-1 md:py-2 lg:h-[calc(100vh-110px)]">
-      {/* 上半部分：三列布局 */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1.1fr_2.1fr_1.1fr] gap-3">
-        {/* 左侧列 */}
-        <section className="flex flex-col gap-3 min-h-0">
+      {/* 上半部分：三列布局 - 改进间距和最小高度 */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_2.2fr_1fr] xl:grid-cols-[1.1fr_2.4fr_1.2fr] gap-3">
+        
+        {/* 左侧列 - 添加最大宽度限制 */}
+        <section className="flex flex-col gap-3 min-h-0 max-w-full">
           {/* 当前田块 + 四个关键指标 */}
-          <div className="rounded-2xl border border-lime-400/40 bg-slate-950/95 px-3 py-3 md:px-4 md:py-4 flex flex-col gap-2">
+          <div className={`rounded-2xl border px-3 py-3 md:px-4 md:py-4 flex flex-col gap-2 transition-colors
+            ${isDark 
+              ? 'border-lime-400/40 bg-slate-950/95' 
+              : 'border-lime-600/30 bg-white shadow-md'}`}>
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-col">
-                <span className="text-[11px] md:text-xs text-lime-200/90">
+                <span className={`text-[11px] md:text-xs
+                  ${isDark ? 'text-lime-200/90' : 'text-gray-600'}`}>
                   当前监测田块
                 </span>
-                <span className="text-sm md:text-base font-semibold text-lime-50">
+                <span className={`text-sm md:text-base font-semibold
+                  ${isDark ? 'text-lime-50' : 'text-gray-900'}`}>
                   {selectedName}
                 </span>
               </div>
               {selected && (
-                <span className="inline-flex items-center rounded-full bg-lime-400/15 px-2 py-1 text-[10px] md:text-xs text-lime-100 border border-lime-300/60 whitespace-nowrap">
+                <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] md:text-xs border whitespace-nowrap
+                  ${isDark 
+                    ? 'bg-lime-400/15 text-lime-100 border-lime-300/60' 
+                    : 'bg-lime-50 text-lime-800 border-lime-300'}`}>
                   长势指数 {Math.round(selected.healthScore * 100)}%
                 </span>
               )}
@@ -207,50 +237,61 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 左侧纵向环境指标列表：给 flex-1，让它撑满，不再留下大空白 */}
-          <div className="flex-1 flex flex-col gap-2 md:overflow-y-auto md:pr-1">
+          {/* 环境指标列表 - 改进滚动区域 */}
+          <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto pr-1 scrollbar-thin">
             {leftMetrics.map((item) => (
               <LeftMetricCard key={item.label} item={item} />
             ))}
           </div>
         </section>
 
-        {/* 中间列：3D 场景 */}
-        <section className="min-h-[260px] md:min-h-[320px]">
+        {/* 中间列：3D 场景 - 确保合适高度 */}
+        <section className="min-h-[320px] lg:min-h-[400px]">
           <SceneCanvas />
         </section>
 
-        {/* 右侧列：光照控制 + 图表 + 告警 */}
-        <section className="flex flex-col gap-3 min-h-0">
-          {/* 光照控制 */}
-          <div className="h-[220px] md:h-[40%]">
+        {/* 右侧列 - 改进布局和间距 */}
+        <section className="flex flex-col gap-3 min-h-0 max-w-full">
+          {/* 光照控制面板 - 固定合理高度 */}
+          <div className="h-auto lg:h-[240px] xl:h-[260px]">
             <LightingControlPanel
               fieldName={selected?.name}
               currentLight={metrics?.light}
             />
           </div>
 
-          {/* 两个图表：产量趋势 + 生长周期 */}
-          <div className="grid grid-cols-1 md:grid-rows-2 gap-2 flex-1 min-h-[180px]">
-            <div className="rounded-xl border border-lime-400/30 bg-slate-950/90 px-3 py-2 flex flex-col gap-1 min-h-[140px]">
-              <div className="flex items-center justify-between gap-1 text-[11px] md:text-xs text-lime-100/90">
+          {/* 图表区域 - 使用 flex-1 自动分配剩余空间 */}
+          <div className="flex-1 min-h-0 grid grid-cols-1 gap-3">
+            {/* 产量趋势图 */}
+            <div className={`rounded-xl border px-3 py-2 flex flex-col gap-1 min-h-[160px] transition-colors
+              ${isDark 
+                ? 'border-lime-400/30 bg-slate-950/90' 
+                : 'border-lime-600/30 bg-white shadow-sm'}`}>
+              <div className={`flex items-center justify-between gap-1 text-[11px] md:text-xs
+                ${isDark ? 'text-lime-100/90' : 'text-gray-800'}`}>
                 <span>产量趋势（示意）</span>
-                <span className="text-lime-300 whitespace-nowrap">
+                <span className={`whitespace-nowrap ${isDark ? 'text-lime-300' : 'text-lime-700'}`}>
                   选中田块的历史变化
                 </span>
               </div>
-              <div className="mt-1 flex-1 min-h-[100px]">
+              <div className="mt-1 flex-1 min-h-[120px]">
                 <YieldTrendChart data={yieldData} loading={historyLoading} />
               </div>
             </div>
-            <div className="rounded-xl border border-lime-400/30 bg-slate-950/90 px-3 py-2 flex flex-col gap-1 min-h-[140px]">
-              <div className="flex items-center justify-between gap-1 text-[11px] md:text-xs text-lime-100/90">
+
+            {/* 生长周期图 */}
+            <div className={`rounded-xl border px-3 py-2 flex flex-col gap-1 min-h-[160px] transition-colors
+              ${isDark 
+                ? 'border-lime-400/30 bg-slate-950/90' 
+                : 'border-lime-600/30 bg-white shadow-sm'}`}>
+              <div className={`flex items-center justify-between gap-1 text-[11px] md:text-xs
+                ${isDark ? 'text-lime-100/90' : 'text-gray-800'}`}>
                 <span>作物生长周期（示意）</span>
-                <span className="text-lime-300 whitespace-nowrap">
+                <span className={`whitespace-nowrap ${isDark ? 'text-lime-300' : 'text-lime-700'}`}>
                   生长进度 0-100%
                 </span>
               </div>
-              <div className="mt-1 flex-1 min-h-[100px]">
+              <div className="mt-1 flex-1 min-h-[120px]">
                 <GrowthCycleChart
                   data={growthData}
                   loading={historyLoading}
@@ -259,31 +300,39 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 告警列表 */}
-          <div className="rounded-xl border border-lime-400/30 bg-slate-950/95 p-3 flex flex-col gap-2">
+          {/* 告警列表 - 固定高度，避免挤压 */}
+          <div className={`rounded-xl border p-3 flex flex-col gap-2 transition-colors
+            ${isDark 
+              ? 'border-lime-400/30 bg-slate-950/95' 
+              : 'border-lime-600/30 bg-white shadow-sm'}`}>
             <div className="flex items-center justify-between gap-1">
-              <h2 className="text-sm font-semibold text-lime-100">
+              <h2 className={`text-sm font-semibold ${isDark ? 'text-lime-100' : 'text-gray-900'}`}>
                 实时告警
               </h2>
-              <span className="text-[10px] text-lime-200/80 whitespace-nowrap">
+              <span className={`text-[10px] whitespace-nowrap
+                ${isDark ? 'text-lime-200/80' : 'text-gray-600'}`}>
                 最近 {mockAlerts.length} 条（示例）
               </span>
             </div>
-            <ul className="space-y-1 max-h-32 overflow-y-auto text-[11px] md:text-xs">
+            <ul className="space-y-1 max-h-32 overflow-y-auto text-[11px] md:text-xs scrollbar-thin">
               {mockAlerts.map((a) => (
                 <li
                   key={a.id}
-                  className="border border-lime-400/40 rounded-lg px-2 py-2 bg-slate-950/90"
+                  className={`border rounded-lg px-2 py-2 transition-colors
+                    ${isDark 
+                      ? 'border-lime-400/40 bg-slate-950/90' 
+                      : 'border-lime-300 bg-lime-50/50'}`}
                 >
                   <div className="flex justify-between mb-1 gap-1">
-                    <span className="font-medium text-lime-100">
+                    <span className={`font-medium ${isDark ? 'text-lime-100' : 'text-gray-900'}`}>
                       {a.time}
                     </span>
-                    <span className="text-[10px] text-amber-300 whitespace-nowrap">
+                    <span className={`text-[10px] whitespace-nowrap
+                      ${isDark ? 'text-amber-300' : 'text-amber-600'}`}>
                       光照 / 环境
                     </span>
                   </div>
-                  <p className="text-lime-100/90 leading-snug">
+                  <p className={`leading-snug ${isDark ? 'text-lime-100/90' : 'text-gray-700'}`}>
                     {a.msg}
                   </p>
                 </li>
