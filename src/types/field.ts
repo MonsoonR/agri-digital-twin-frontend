@@ -15,6 +15,9 @@ export type FieldMetric = {
   humidity: number;
   light: number;
   soilPH: number;
+  // 可选字段：如果后端提供这些数据，可以取消注释
+  // co2?: number;        // 二氧化碳浓度 (ppm)
+  // windSpeed?: number;  // 风速 (m/s)
 };
 
 export type FieldStatus = {

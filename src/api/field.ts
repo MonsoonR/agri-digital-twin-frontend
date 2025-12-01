@@ -1,6 +1,55 @@
 // src/api/field.ts
 import type { FieldStatus, FieldHistoryPoint } from "../types/field";
+import { get } from "../config/api";
 
+/**
+ * 获取所有田块的当前状态
+ * @returns Promise<FieldStatus[]>
+ */
+export async function fetchFieldStatuses(): Promise<FieldStatus[]> {
+  try {
+    const data = await get<FieldStatus[]>("/fields/status");
+    return data;
+  } catch (error: any) {
+    // 如果API调用失败，抛出错误让上层处理
+    throw new Error(`获取田块状态失败: ${error?.message || '未知错误'}`);
+  }
+}
+
+/**
+ * 获取指定田块的历史数据
+ * @param fieldId 田块ID
+ * @returns Promise<FieldHistoryPoint[]>
+ */
+export async function fetchFieldHistory(
+  fieldId: string
+): Promise<FieldHistoryPoint[]> {
+  try {
+    const data = await get<FieldHistoryPoint[]>(`/fields/${fieldId}/history`);
+    return data;
+  } catch (error: any) {
+    throw new Error(`获取田块历史数据失败: ${error?.message || '未知错误'}`);
+  }
+}
+
+/**
+ * 获取单个田块的详细信息
+ * @param fieldId 田块ID
+ * @returns Promise<FieldStatus>
+ */
+export async function fetchFieldDetail(fieldId: string): Promise<FieldStatus> {
+  try {
+    const data = await get<FieldStatus>(`/fields/${fieldId}`);
+    return data;
+  } catch (error: any) {
+    throw new Error(`获取田块详情失败: ${error?.message || '未知错误'}`);
+  }
+}
+
+// ========== 以下为假数据（仅用于开发和测试，生产环境应移除） ==========
+// 如需在开发时使用假数据，可以取消注释下面的代码，并修改 fetchFieldStatuses 和 fetchFieldHistory
+
+/*
 const now = new Date().toISOString();
 
 const makeMetric = (
@@ -16,7 +65,6 @@ const makeMetric = (
   soilPH,
 });
 
-// 8 块田，分别设置不同状态
 const MOCK_FIELDS: FieldStatus[] = [
   {
     id: "A1",
@@ -26,123 +74,14 @@ const MOCK_FIELDS: FieldStatus[] = [
     healthScore: 0.9,
     growthStage: "孕穗期",
     lastUpdated: now,
-    latestMetric: makeMetric(26.1, 78, 880, 6.2), // 健康
+    latestMetric: makeMetric(26.1, 78, 880, 6.2),
   },
-  {
-    id: "A2",
-    name: "A2 区",
-    row: 0,
-    col: 1,
-    healthScore: 0.72,
-    growthStage: "灌浆期",
-    lastUpdated: now,
-    latestMetric: makeMetric(25.8, 72, 640, 6.1), // 光照略低
-  },
-  {
-    id: "A3",
-    name: "A3 区",
-    row: 0,
-    col: 2,
-    healthScore: 0.55,
-    growthStage: "抽穗期",
-    lastUpdated: now,
-    latestMetric: makeMetric(25.4, 69, 580, 6.0), // 光照偏低
-  },
-  {
-    id: "A4",
-    name: "A4 区",
-    row: 0,
-    col: 3,
-    healthScore: 0.4,
-    growthStage: "分蘖期",
-    lastUpdated: now,
-    latestMetric: makeMetric(24.9, 65, 560, 6.3), // 生长早期 + 光照不足
-  },
-  {
-    id: "B1",
-    name: "B1 区",
-    row: 1,
-    col: 0,
-    healthScore: 0.68,
-    growthStage: "拔节期",
-    lastUpdated: now,
-    latestMetric: makeMetric(26.0, 44, 860, 6.4), // 偏干
-  },
-  {
-    id: "B2",
-    name: "B2 区",
-    row: 1,
-    col: 1,
-    healthScore: 0.48,
-    growthStage: "拔节期",
-    lastUpdated: now,
-    latestMetric: makeMetric(25.5, 38, 820, 6.5), // 明显干旱
-  },
-  {
-    id: "B3",
-    name: "B3 区",
-    row: 1,
-    col: 2,
-    healthScore: 0.52,
-    growthStage: "抽穗期",
-    lastUpdated: now,
-    latestMetric: makeMetric(25.7, 62, 800, 5.0), // 土壤偏酸
-  },
-  {
-    id: "B4",
-    name: "B4 区",
-    row: 1,
-    col: 3,
-    healthScore: 0.45,
-    growthStage: "成熟期",
-    lastUpdated: now,
-    latestMetric: makeMetric(25.9, 60, 830, 7.1), // 土壤偏碱
-  },
+  // ... 其他假数据
 ];
 
-export async function fetchFieldStatuses(): Promise<FieldStatus[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return MOCK_FIELDS;
-}
-
-// 历史数据模板
 const BASE_HISTORY: FieldHistoryPoint[] = [
   { label: "4月", yield: 2200, growthIndex: 20 },
   { label: "5月", yield: 2600, growthIndex: 40 },
-  { label: "6月", yield: 3100, growthIndex: 60 },
-  { label: "7月", yield: 3400, growthIndex: 75 },
-  { label: "8月", yield: 3600, growthIndex: 90 },
-  { label: "9月", yield: 3800, growthIndex: 100 },
+  // ... 其他历史数据
 ];
-
-export async function fetchFieldHistory(
-  fieldId: string
-): Promise<FieldHistoryPoint[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  const factor =
-    fieldId === "A1"
-      ? 1.05
-      : fieldId === "A2"
-      ? 1.0
-      : fieldId === "A3"
-      ? 0.95
-      : fieldId === "A4"
-      ? 0.9
-      : fieldId === "B1"
-      ? 0.98
-      : fieldId === "B2"
-      ? 0.9
-      : fieldId === "B3"
-      ? 0.92
-      : 0.88;
-
-  return BASE_HISTORY.map((p, index) => ({
-    label: p.label,
-    yield: Math.round(p.yield * factor + index * 40),
-    growthIndex: Math.min(
-      100,
-      Math.max(0, Math.round(p.growthIndex * factor + (factor - 1) * 20))
-    ),
-  }));
-}
+*/

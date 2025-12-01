@@ -33,7 +33,7 @@ export default function LightingControlPanel({
     currentLight !== undefined ? `${currentLight.toFixed(0)} lx` : "--";
 
   return (
-    <div className={`h-full rounded-2xl border p-3 md:p-4 flex flex-col gap-3 transition-colors ${
+    <div className={`h-full rounded-2xl border p-3 md:p-4 flex flex-col gap-3 transition-colors overflow-hidden ${
       isDark 
         ? 'border-lime-400/40 bg-slate-950/95' 
         : 'border-lime-600/30 bg-white shadow-md'
@@ -136,7 +136,7 @@ export default function LightingControlPanel({
 
       {/* 自动模式说明 / 手动开关 */}
       {autoMode ? (
-        <div className={`rounded-xl border px-3 py-2 text-[10px] md:text-[11px] leading-relaxed transition-colors overflow-hidden ${
+        <div className={`rounded-xl border px-3 py-2 text-[10px] md:text-[11px] leading-relaxed transition-colors flex-shrink-0 ${
           isDark 
             ? 'border-lime-400/25 bg-slate-950/95 text-lime-200/80'
             : 'border-lime-500/25 bg-lime-50/50 text-gray-700'
@@ -152,7 +152,7 @@ export default function LightingControlPanel({
             <span className={`font-medium ${isDark ? 'text-lime-300' : 'text-lime-700'}`}>
               {lightThreshold} lx
             </span>{" "}
-            时自动开启补光灯；高于阈值后自动关闭。
+            时自动开启补光灯；当光照恢复高于阈值一定幅度后自动关闭。阈值和控制逻辑可与真实物联网设备参数联动。
           </p>
         </div>
       ) : (

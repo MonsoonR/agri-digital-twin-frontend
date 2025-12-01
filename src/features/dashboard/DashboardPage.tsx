@@ -48,6 +48,9 @@ function LeftMetricCard({ item }: { item: LeftMetricItem }) {
 function BottomStatusBar() {
   const { isDark } = useTheme();
   
+  // TODO: 接入后端API获取作物生长全周期监控数据
+  // 建议API端点: GET /fields/{fieldId}/status/overview
+  // 或从 selected?.latestMetric 和其他字段计算得出
   const items = [
     { label: "作物生长状态", value: "良好", progress: 0.72 },
     { label: "土壤质量", value: "偏酸", progress: 0.45 },
@@ -169,17 +172,23 @@ export default function DashboardPage() {
     {
       label: "二氧化碳浓度",
       icon: "🌫️",
-      value: "420 ppm",
-      desc: "示意数据，可接 CO₂ 传感器",
+      // @ts-ignore - 可选字段，后端可能提供
+      value: metrics?.co2 ? `${metrics.co2.toFixed(0)} ppm` : "420 ppm",
+      // @ts-ignore
+      desc: metrics?.co2 ? "CO₂ 传感器数据" : "示意数据，可接 CO₂ 传感器",
     },
     {
       label: "风速",
       icon: "🌬️",
-      value: "3.4 m/s",
-      desc: "示意数据,可接气象站",
+      // @ts-ignore - 可选字段，后端可能提供
+      value: metrics?.windSpeed ? `${metrics.windSpeed.toFixed(1)} m/s` : "3.4 m/s",
+      // @ts-ignore
+      desc: metrics?.windSpeed ? "气象站数据" : "示意数据,可接气象站",
     },
   ];
 
+  // TODO: 接入后端API获取实时告警数据
+  // 建议API端点: GET /alerts?fieldId={fieldId}&limit=10
   const mockAlerts = [
     { id: 1, time: "10:05", msg: "A1 区光照不足，已触发自动补光逻辑。" },
     { id: 2, time: "09:52", msg: "B3 区土壤湿度偏高，建议适度排水。" },
@@ -193,8 +202,8 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-3 py-1 md:py-2 lg:h-[calc(100vh-110px)]">
-      {/* 上半部分：三列布局 - 改进间距和最小高度 */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_2.2fr_1fr] xl:grid-cols-[1.1fr_2.4fr_1.2fr] gap-3">
+      {/* 上半部分：三列布局 - 改进宽屏适配，确保右侧图表区域始终可见 */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_2.2fr_1fr] xl:grid-cols-[1.1fr_2.4fr_1.2fr] 2xl:grid-cols-[1fr_2.5fr_1.3fr] gap-3">
         
         {/* 左侧列 - 添加最大宽度限制 */}
         <section className="flex flex-col gap-3 min-h-0 max-w-full">
@@ -250,18 +259,18 @@ export default function DashboardPage() {
           <SceneCanvas />
         </section>
 
-        {/* 右侧列 - 改进布局和间距 */}
-        <section className="flex flex-col gap-3 min-h-0 max-w-full">
-          {/* 光照控制面板 - 固定合理高度 */}
-          <div className="h-auto lg:h-[240px] xl:h-[260px]">
+        {/* 右侧列 - 改进布局和间距，确保宽屏时也能正常显示 */}
+        <section className="flex flex-col gap-3 min-h-0 w-full overflow-hidden">
+          {/* 光照控制面板 - 固定合理高度，防止溢出 */}
+          <div className="flex-shrink-0 h-auto lg:h-[200px] xl:h-[220px] 2xl:h-[240px] min-h-0">
             <LightingControlPanel
               fieldName={selected?.name}
               currentLight={metrics?.light}
             />
           </div>
 
-          {/* 图表区域 - 使用 flex-1 自动分配剩余空间 */}
-          <div className="flex-1 min-h-0 grid grid-cols-1 gap-3">
+          {/* 图表区域 - 使用 flex-1 自动分配剩余空间，确保最小高度 */}
+          <div className="flex-1 min-h-[320px] grid grid-cols-1 gap-3 overflow-hidden">
             {/* 产量趋势图 */}
             <div className={`rounded-xl border px-3 py-2 flex flex-col gap-1 min-h-[160px] transition-colors
               ${isDark 
