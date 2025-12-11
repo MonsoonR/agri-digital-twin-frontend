@@ -1,4 +1,5 @@
 // src/types/field.ts
+// 田块指标和时间序列类型
 
 // 水稻生育阶段
 export type GrowthStage =
@@ -9,15 +10,38 @@ export type GrowthStage =
   | "灌浆期"
   | "成熟期";
 
+// 最新田块指标
 export type FieldMetric = {
+  timestamp?: string;
+  growthIndex?: number; // 作物长势指数（0-1）
+  maturity?: number; // 成熟期预测（0-100）
+  chlorophyll?: number; // 叶绿素
+  lai?: number; // 叶面积指数
+  plantHeight?: number; // 株高
+  nitrogen?: number;
+  phosphorus?: number;
+  potassium?: number;
+  soilPH?: number;
+  organicMatter?: number;
+  salinity?: number;
+};
+
+// 关键指标时间序列点
+export type MetricHistoryPoint = {
   timestamp: string;
-  temperature: number;
-  humidity: number;
-  light: number;
-  soilPH: number;
-  // 可选字段：如果后端提供这些数据，可以取消注释
-  // co2?: number;        // 二氧化碳浓度 (ppm)
-  // windSpeed?: number;  // 风速 (m/s)
+  label: string;
+  yield: number; // 生产力 / 产量指数 0-100
+  growthIndex: number; // 生长进度 0-100
+  maturity?: number;
+  chlorophyll?: number;
+  lai?: number;
+  plantHeight?: number;
+  nitrogen?: number;
+  phosphorus?: number;
+  potassium?: number;
+  soilPH?: number;
+  organicMatter?: number;
+  salinity?: number;
 };
 
 export type FieldStatus = {
@@ -31,8 +55,4 @@ export type FieldStatus = {
   growthStage: GrowthStage;
 };
 
-export type FieldHistoryPoint = {
-  label: string;      // 时间标签，例如 "4月"
-  yield: number;      // 产量指数
-  growthIndex: number; // 生长进度 0~100
-};
+export type FieldHistoryPoint = MetricHistoryPoint;

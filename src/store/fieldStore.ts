@@ -1,7 +1,7 @@
 // src/store/fieldStore.ts
 import { create } from "zustand";
-import type { FieldStatus, FieldHistoryPoint } from "../types/field";
-import { fetchFieldStatuses, fetchFieldHistory } from "../api/field";
+import type { FieldStatus, FieldHistoryPoint, MetricHistoryPoint } from "../types/field";
+import { fetchFieldStatuses, fetchFieldHistory, fetchFieldMetricSeries } from "../api/field";
 
 type LightingMode = "auto" | "manual";
 
@@ -16,6 +16,12 @@ type FieldStore = {
   history: FieldHistoryPoint[];
   historyLoading: boolean;
   historyError?: string;
+  historyByField: Record<string, FieldHistoryPoint[]>;
+
+  metricSeries: MetricHistoryPoint[];
+  metricLoading: boolean;
+  metricError?: string;
+  metricsByField: Record<string, MetricHistoryPoint[]>;
 
   // 光照控制
   lightingMode: LightingMode;
@@ -24,6 +30,7 @@ type FieldStore = {
 
   loadFields: () => Promise<void>;
   loadFieldHistory: (fieldId: string) => Promise<void>;
+  loadFieldMetrics: (fieldId: string) => Promise<void>;
   setSelectedField: (id?: string) => void;
   setHoveredField: (id?: string) => void;
 
@@ -44,6 +51,12 @@ export const useFieldStore = create<FieldStore>((set, get) => ({
   history: [],
   historyLoading: false,
   historyError: undefined,
+  historyByField: {},
+
+  metricSeries: [],
+  metricLoading: false,
+  metricError: undefined,
+  metricsByField: {},
 
   lightingMode: "auto",
   manualLightOn: false,
@@ -66,6 +79,7 @@ export const useFieldStore = create<FieldStore>((set, get) => ({
       const id = get().selectedFieldId;
       if (id) {
         get().loadFieldHistory(id);
+        get().loadFieldMetrics(id);
       }
     } catch (err: any) {
       set({
@@ -77,9 +91,19 @@ export const useFieldStore = create<FieldStore>((set, get) => ({
 
   async loadFieldHistory(fieldId: string) {
     try {
+      const cached = get().historyByField[fieldId];
+      if (cached) {
+        set({ history: cached });
+        return;
+      }
+
       set({ historyLoading: true, historyError: undefined });
       const data = await fetchFieldHistory(fieldId);
-      set({ history: data, historyLoading: false });
+      set((state) => ({
+        history: data,
+        historyLoading: false,
+        historyByField: { ...state.historyByField, [fieldId]: data },
+      }));
     } catch (err: any) {
       set({
         historyLoading: false,
@@ -88,12 +112,40 @@ export const useFieldStore = create<FieldStore>((set, get) => ({
     }
   },
 
+  async loadFieldMetrics(fieldId: string) {
+    try {
+      const cached = get().metricsByField[fieldId];
+      if (cached) {
+        set({ metricSeries: cached });
+        return;
+      }
+      set({ metricLoading: true, metricError: undefined });
+      const data = await fetchFieldMetricSeries(fieldId);
+      set((state) => ({
+        metricSeries: data,
+        metricLoading: false,
+        metricsByField: { ...state.metricsByField, [fieldId]: data },
+      }));
+    } catch (err: any) {
+      set({
+        metricLoading: false,
+        metricError: err?.message ?? "关键指标加载失败",
+      });
+    }
+  },
+
   setSelectedField(id) {
-    set({ selectedFieldId: id });
+    const { historyByField, metricsByField } = get();
+    set({
+      selectedFieldId: id,
+      history: id && historyByField[id] ? historyByField[id] : [],
+      metricSeries: id && metricsByField[id] ? metricsByField[id] : [],
+    });
     if (id) {
       get().loadFieldHistory(id);
+      get().loadFieldMetrics(id);
     } else {
-      set({ history: [] });
+      set({ history: [], metricSeries: [] });
     }
   },
 

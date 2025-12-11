@@ -25,10 +25,12 @@ export default function YieldTrendChart({ data, loading }: YieldTrendChartProps)
 
   if (!data.length) {
     return (
-      <div className={`w-full h-full flex items-center justify-center text-[10px] ${
-        isDark ? 'text-lime-200/70' : 'text-gray-600'
-      }`}>
-        {loading ? "载入中…" : "暂无历史数据"}
+      <div
+        className={`w-full h-full flex items-center justify-center text-[10px] ${
+          isDark ? "text-lime-200/70" : "text-gray-600"
+        }`}
+      >
+        {loading ? "载入中..." : "暂无历史数据"}
       </div>
     );
   }

@@ -50,12 +50,13 @@ function healthToColor(health: number, isDark: boolean): Color {
 }
 
 function getStressType(field: FieldStatus, supplementOn: boolean): StressType {
-  const m = field.latestMetric;
-  const lowLight = m.light < 700;
-  const tooDry = m.humidity < 50;
-  const badPH = m.soilPH < 5.5 || m.soilPH > 6.8;
+  const m = field.latestMetric || {};
+  const badPH =
+    m.soilPH !== undefined ? m.soilPH < 5.5 || m.soilPH > 7.2 : false;
+  const highSalt = m.salinity !== undefined ? m.salinity > 8 : false;
+  const lowLight = false; // 新数据无光照字段，保持默认
 
-  if (tooDry) return "dry";
+  if (highSalt) return "dry";
   if (badPH) return "soilPH";
   if (lowLight && !supplementOn) return "lowLight";
   return "healthy";
@@ -84,7 +85,7 @@ function RicePlant({
 
   return (
     <group>
-      {/* 秆 */}
+      {/* 茎 */}
       <mesh position={[0, stemHeight / 2, 0]} castShadow receiveShadow>
         <cylinderGeometry
           args={[stemRadius * 0.7, stemRadius, stemHeight, 8]}
@@ -226,7 +227,6 @@ export default function FieldGrid() {
     setHoveredField,
     lightingMode,
     manualLightOn,
-    lightThreshold,
   } = useFieldStore();
   
   const { isDark } = useTheme();
@@ -251,7 +251,7 @@ export default function FieldGrid() {
   }, [fields]);
 
   if (error) {
-    console.error("加载田块数据失败：", error);
+    console.error("加载田块数据失败", error);
   }
 
   if (fields.length === 0) {
@@ -301,7 +301,7 @@ export default function FieldGrid() {
         const isSelected = selectedFieldId === field.id;
 
         const supplementOn = autoMode
-          ? field.latestMetric.light < lightThreshold
+          ? false
           : manualLightOn && isSelected;
 
         let topColor = healthToColor(field.healthScore, isDark);
@@ -366,7 +366,7 @@ export default function FieldGrid() {
               />
             </mesh>
 
-            {/* 田埂网格线 */}
+            {/* 田埂网格 */}
             <mesh
               position={[0, FIELD_THICKNESS + 0.015, 0]}
               rotation={[-Math.PI / 2, 0, 0]}

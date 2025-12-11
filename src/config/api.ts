@@ -5,7 +5,7 @@
 export const API_BASE_URL = 
   import.meta.env.VITE_API_BASE_URL || 
   import.meta.env.VITE_BACKEND_URL || 
-  'http://localhost:3000/api';
+  'http://localhost:4000/api';
 
 // 请求超时时间（毫秒）
 export const API_TIMEOUT = 10000;
